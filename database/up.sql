@@ -1,0 +1,1 @@
+\i database/migrations/library_up.sql
