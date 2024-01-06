@@ -53,3 +53,9 @@ func (r *BookResponse) FromModel(m *Book) {
 		r.Author.FromModel(m.Author)
 	}
 }
+
+type BookFilterRequest struct {
+	ID         *uint `form:"id"`
+	CategoryId *uint `form:"category_id"`
+	AuthorId   *uint `form:"author_id"`
+}

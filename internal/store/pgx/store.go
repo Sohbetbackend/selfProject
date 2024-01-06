@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"reflect"
 
 	"github.com/Sohbetbackend/selfProject/config"
+	"github.com/Sohbetbackend/selfProject/internal/models"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
@@ -28,4 +30,27 @@ func Init() *PgxStore {
 		log.Fatal(err)
 	}
 	return &PgxStore{pool: pool}
+}
+
+type pgxQuery func(conn *pgxpool.Conn) (err error)
+
+func (d *PgxStore) runQuery(ctx context.Context, f pgxQuery) (err error) {
+	err = d.Pool().AcquireFunc(ctx, f)
+	if err != nil {
+		return err
+	}
+	return
+}
+
+func parseColumnsForScan(sub interface{}, addColumns ...interface{}) []interface{} {
+	s := reflect.ValueOf(sub).Elem()
+	numCols := s.NumField() - len(sub.(models.HasRelationFields).RelationFields())
+
+	columns := []interface{}{}
+	for i := 0; i < numCols; i++ {
+		field := s.Field(i)
+		columns = append(columns, field.Addr().Interface())
+	}
+	columns = append(columns, addColumns...)
+	return columns
 }
