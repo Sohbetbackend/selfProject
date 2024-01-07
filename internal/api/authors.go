@@ -24,6 +24,14 @@ func AuthorList(c *gin.Context) {
 		handleError(c, app.NewAppError(errMsg, errKey, ""))
 		return
 	}
+	if r.Limit == nil {
+		r.Limit = new(int)
+		*r.Limit = 30
+	}
+	if r.Offset == nil {
+		r.Offset = new(int)
+		*r.Offset = 0
+	}
 	authors, total, err := app.AuthorsList(r)
 	if err != nil {
 		handleError(c, err)
@@ -41,7 +49,11 @@ func AuthorUpdate(c *gin.Context) {
 		handleError(c, app.NewAppError(errMsg, errKey, ""))
 		return
 	}
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		handleError(c, err)
+		return
+	}
 	idp := uint(id)
 	r.ID = &idp
 

@@ -11,16 +11,21 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-const sqlBookFields = `b.id, b.name, b.page, b.category_id, b.author_id`
+const sqlBookFields = `b.id, b.category_id, b.author_id, b.name, b.page`
 const sqlBookInsert = `insert into books`
 const sqlBookUpdate = `update books b set id=id`
 const sqlBookDelete = `delete from books b where id = ANY($1::int[])`
 const sqlBookSelect = `select ` + sqlBookFields + ` from books b where b.id = ANY($1::int[])`
-const sqlBookSelectMany = `select ` + sqlBookFields + ` count(*) over() as total from books b
-	where b.id=b.id`
+const sqlBookSelectMany = `select ` + sqlBookFields + `, count(*) over() as total from books b where b.id=b.id`
+
+const sqlBookAuthor = `select ` + sqlAuthorFields + `, b.id from books b
+	right join authors a on (a.id=b.author_id) where b.id = ANY($1::int[])`
+
+const sqlBookCategory = `select ` + sqlCategoriesFields + `, b.id from books b
+	right join categories ct on (ct.id=b.author_id) where b.id = ANY($1::int[])`
 
 func scanBook(rows pgx.Row, m *models.Book, addColumns ...interface{}) (err error) {
-	err = rows.Scan(parseColumnsForScan(m, addColumns...))
+	err = rows.Scan(parseColumnsForScan(m, addColumns...)...)
 	return
 }
 
@@ -56,7 +61,7 @@ func (d *PgxStore) BookFindByIds(Ids []string) ([]*models.Book, error) {
 	return books, nil
 }
 
-func (d *PgxStore) BooksFindBy(f models.BookFilterRequest) (books []models.Book, total int, err error) {
+func (d *PgxStore) BooksFindBy(f models.BookFilterRequest) (books []*models.Book, total int, err error) {
 	args := []interface{}{}
 	qs, args := BooksListBuildQuery(f, args)
 	err = d.runQuery(context.Background(), func(tx *pgxpool.Conn) (err error) {
@@ -67,7 +72,7 @@ func (d *PgxStore) BooksFindBy(f models.BookFilterRequest) (books []models.Book,
 			if err != nil {
 				return err
 			}
-			books = append(books, book)
+			books = append(books, &book)
 		}
 		return
 	})
@@ -82,7 +87,7 @@ func (d *PgxStore) BookCreate(model *models.Book) (*models.Book, error) {
 	qs, args := BookCreateQuery(model)
 	qs += " RETURNING id"
 	err := d.runQuery(context.Background(), func(conn *pgxpool.Conn) (err error) {
-		_, err = conn.Query(context.Background(), qs, args...)
+		err = conn.QueryRow(context.Background(), qs, args...).Scan(&model.ID)
 		return
 	})
 	if err != nil {
@@ -180,7 +185,7 @@ func BooksListBuildQuery(f models.BookFilterRequest, args []interface{}) (string
 	}
 	if f.AuthorId != nil && *f.AuthorId != 0 {
 		args = append(args, *f.AuthorId)
-		wheres += " and b.school_id=$" + strconv.Itoa(len(args))
+		wheres += " and b.author_id=$" + strconv.Itoa(len(args))
 	}
 	if f.CategoryId != nil && *f.CategoryId != 0 {
 		args = append(args, *f.CategoryId)
@@ -191,4 +196,97 @@ func BooksListBuildQuery(f models.BookFilterRequest, args []interface{}) (string
 	qs := sqlBookSelectMany
 	qs = strings.ReplaceAll(qs, "b.id=b.id", "b.id=b.id "+wheres+" ")
 	return qs, args
+}
+
+func (d *PgxStore) BookLoadRelations(l *[]*models.Book) error {
+	ids := []string{}
+	for _, m := range *l {
+		ids = append(ids, strconv.Itoa(int(m.ID)))
+	}
+	if len(ids) < 1 {
+		return nil
+	}
+
+	if rs, err := d.BookLoadAuthor(ids); err != nil {
+		return err
+	} else {
+
+		for _, r := range rs {
+			for _, m := range *l {
+				if r.ID == m.ID {
+					m.Author = r.Relation
+				}
+			}
+		}
+	}
+
+	if rs, err := d.BookLoadCategory(ids); err != nil {
+		return err
+	} else {
+
+		for _, r := range rs {
+			for _, m := range *l {
+				if r.ID == m.ID {
+					m.Category = r.Relation
+				}
+			}
+		}
+	}
+	return nil
+}
+
+type BookLoadAuthorItem struct {
+	ID       uint
+	Relation *models.Author
+}
+
+func (d *PgxStore) BookLoadAuthor(ids []string) ([]BookLoadAuthorItem, error) {
+	res := []BookLoadAuthorItem{}
+	err := d.runQuery(context.Background(), func(tx *pgxpool.Conn) (err error) {
+		rows, err := tx.Query(context.Background(), sqlBookAuthor, (ids))
+		for rows.Next() {
+			sub := models.Author{}
+			pid := uint(0)
+			err = scanAuthors(rows, &sub, &pid)
+			if err != nil {
+				return err
+			}
+			res = append(res, BookLoadAuthorItem{ID: pid, Relation: &sub})
+		}
+		return
+	})
+	if err != nil {
+		utils.LoggerDesc("Query error").Error(err)
+		return nil, err
+	}
+
+	return res, nil
+}
+
+type BookLoadCategoryItem struct {
+	ID       uint
+	Relation *models.Category
+}
+
+func (d *PgxStore) BookLoadCategory(ids []string) ([]BookLoadCategoryItem, error) {
+	res := []BookLoadCategoryItem{}
+	err := d.runQuery(context.Background(), func(tx *pgxpool.Conn) (err error) {
+		rows, err := tx.Query(context.Background(), sqlBookCategory, (ids))
+		for rows.Next() {
+			sub := models.Category{}
+			pid := uint(0)
+			err = scanCategories(rows, &sub, &pid)
+			if err != nil {
+				return err
+			}
+			res = append(res, BookLoadCategoryItem{ID: pid, Relation: &sub})
+		}
+		return
+	})
+	if err != nil {
+		utils.LoggerDesc("Query error").Error(err)
+		return nil, err
+	}
+
+	return res, nil
 }

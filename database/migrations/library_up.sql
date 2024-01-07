@@ -1,9 +1,9 @@
 create table books (
     id serial primary KEY,
+    category_id bigint NULL REFERENCES categories,
+    author_id bigint NULL REFERENCES authors,
     name varchar(255) NOT NULL,
-    page bigint DEFAULT NULL,
-    category_id bigint DEFAULT NULL REFERENCES categories ON DELETE CASCADE,
-    author_id bigint DEFAULT NULL REFERENCES authors ON DELETE CASCADE
+    page varchar(255) DEFAULT NULL
 );
 
 create table categories (

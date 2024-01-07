@@ -2,10 +2,10 @@ package models
 
 type Book struct {
 	ID         uint      `json:"id"`
-	Name       string    `json:"name"`
-	Page       *string   `json:"page"`
 	CategoryId *uint     `json:"category_id"`
 	AuthorId   *uint     `json:"author_id"`
+	Name       string    `json:"name"`
+	Page       *string   `json:"page"`
 	Category   *Category `json:"category"`
 	Author     *Author   `json:"author"`
 }
@@ -58,4 +58,5 @@ type BookFilterRequest struct {
 	ID         *uint `form:"id"`
 	CategoryId *uint `form:"category_id"`
 	AuthorId   *uint `form:"author_id"`
+	PaginationRequest
 }

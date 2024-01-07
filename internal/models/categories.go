@@ -5,6 +5,10 @@ type Category struct {
 	Name string `json:"name"`
 }
 
+func (Category) RelationFields() []string {
+	return []string{}
+}
+
 type CategoryRequest struct {
 	ID   *uint   `json:"id"`
 	Name *string `json:"name"`
@@ -25,4 +29,9 @@ func (b *CategoryRequest) ToModel(m *Category) {
 func (r *CategoryResponse) FromModel(m *Category) {
 	r.ID = m.ID
 	r.Name = m.Name
+}
+
+type CategoryFilterRequest struct {
+	ID *uint `json:"id"`
+	PaginationRequest
 }

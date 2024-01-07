@@ -13,10 +13,14 @@ func BooksList(f models.BookFilterRequest) ([]*models.BookResponse, int, error) 
 	if err != nil {
 		return nil, 0, err
 	}
+	err = store.Store().BookLoadRelations(&books)
+	if err != nil {
+		return nil, 0, err
+	}
 	booksResponse := []*models.BookResponse{}
 	for _, book := range books {
 		b := models.BookResponse{}
-		b.FromModel(&book)
+		b.FromModel(book)
 		booksResponse = append(booksResponse, &b)
 	}
 	return booksResponse, total, err
@@ -31,6 +35,11 @@ func BookUpdate(data models.BookRequest) (*models.BookResponse, error) {
 	if err != nil {
 		return nil, err
 	}
+	err = store.Store().BookLoadRelations(&[]*models.Book{model})
+	if err != nil {
+		return nil, err
+	}
+
 	res := &models.BookResponse{}
 	res.FromModel(model)
 	return res, nil
@@ -39,12 +48,16 @@ func BookUpdate(data models.BookRequest) (*models.BookResponse, error) {
 func BookCreate(data models.BookRequest) (*models.BookResponse, error) {
 	model := &models.Book{}
 	data.ToModel(model)
-	res := &models.BookResponse{}
 	var err error
 	model, err = store.Store().BookCreate(model)
 	if err != nil {
 		return nil, err
 	}
+	err = store.Store().BookLoadRelations(&[]*models.Book{model})
+	if err != nil {
+		return nil, err
+	}
+	res := &models.BookResponse{}
 	res.FromModel(model)
 	return res, nil
 }
