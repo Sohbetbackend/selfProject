@@ -31,3 +31,7 @@ func (r *AuthorResponse) FromModel(m *Author) {
 	r.FirstName = m.FirstName
 	r.LastName = m.LastName
 }
+
+type AuthorsFilterRequest struct {
+	ID *uint `form:"id"`
+}

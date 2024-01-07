@@ -11,11 +11,11 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-const sqlBookFields = `b.id, b.name, b.page, b.category_id, b.author_id, b.category, b.author`
+const sqlBookFields = `b.id, b.name, b.page, b.category_id, b.author_id`
 const sqlBookInsert = `insert into books`
 const sqlBookUpdate = `update books b set id=id`
 const sqlBookDelete = `delete from books b where id = ANY($1::int[])`
-const sqlBookSelect = `select ` + sqlBookFields + ` from books b where b,id = ANY($1::int[])`
+const sqlBookSelect = `select ` + sqlBookFields + ` from books b where b.id = ANY($1::int[])`
 const sqlBookSelectMany = `select ` + sqlBookFields + ` count(*) over() as total from books b
 	where b.id=b.id`
 
@@ -89,11 +89,11 @@ func (d *PgxStore) BookCreate(model *models.Book) (*models.Book, error) {
 		utils.LoggerDesc("Query error").Error(err)
 		return nil, err
 	}
-	edilModel, err := d.BookFindById(strconv.Itoa(int(model.ID)))
+	editModel, err := d.BookFindById(strconv.Itoa(int(model.ID)))
 	if err != nil {
 		return nil, err
 	}
-	return edilModel, nil
+	return editModel, nil
 }
 
 func (d *PgxStore) BookUpdate(model *models.Book) (*models.Book, error) {
