@@ -2,7 +2,6 @@ package app
 
 import (
 	"errors"
-	"log"
 	"strings"
 
 	"github.com/Sohbetbackend/selfProject/internal/models"
@@ -11,7 +10,6 @@ import (
 
 func AuthorsList(f models.AuthorsFilterRequest) ([]*models.AuthorResponse, int, error) {
 	authors, total, err := store.Store().AuthorsFindBy(f)
-	log.Println(authors, "+++++++", total)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -22,6 +20,19 @@ func AuthorsList(f models.AuthorsFilterRequest) ([]*models.AuthorResponse, int, 
 		authorsResponse = append(authorsResponse, &a)
 	}
 	return authorsResponse, total, nil
+}
+
+func AuthorDetail(f models.AuthorsFilterRequest) (*models.AuthorResponse, error) {
+	m, _, err := store.Store().AuthorsFindBy(f)
+	if err != nil {
+		return nil, err
+	}
+	if len(m) < 1 {
+		return nil, ErrNotFound
+	}
+	res := &models.AuthorResponse{}
+	res.FromModel(m[0])
+	return res, nil
 }
 
 func AuthorsUpdate(data models.AuthorRequest) (*models.AuthorResponse, error) {

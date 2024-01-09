@@ -16,6 +16,7 @@ func Routes(routes *gin.Engine) {
 		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type"},
 		AllowCredentials: true,
 		AllowAllOrigins:  true,
+		ExposeHeaders:    []string{"X-Total-Count"},
 	}))
 
 	api := routes.Group("/api")

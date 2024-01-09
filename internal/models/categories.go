@@ -10,8 +10,8 @@ func (Category) RelationFields() []string {
 }
 
 type CategoryRequest struct {
-	ID   *uint   `json:"id"`
-	Name *string `json:"name"`
+	ID   *uint   `json:"id" form:"id"`
+	Name *string `json:"name" form:"id"`
 }
 
 type CategoryResponse struct {

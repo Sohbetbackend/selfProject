@@ -26,6 +26,23 @@ func BooksList(f models.BookFilterRequest) ([]*models.BookResponse, int, error) 
 	return booksResponse, total, err
 }
 
+func BookDetail(f models.BookFilterRequest) (*models.BookResponse, error) {
+	m, _, err := store.Store().BooksFindBy(f)
+	if err != nil {
+		return nil, err
+	}
+	err = store.Store().BookLoadRelations(&m)
+	if err != nil {
+		return nil, err
+	}
+	if len(m) < 1 {
+		return nil, ErrNotFound
+	}
+	res := &models.BookResponse{}
+	res.FromModel(m[0])
+	return res, nil
+}
+
 func BookUpdate(data models.BookRequest) (*models.BookResponse, error) {
 	model := &models.Book{}
 	data.ToModel(model)
@@ -48,6 +65,7 @@ func BookUpdate(data models.BookRequest) (*models.BookResponse, error) {
 func BookCreate(data models.BookRequest) (*models.BookResponse, error) {
 	model := &models.Book{}
 	data.ToModel(model)
+	res := &models.BookResponse{}
 	var err error
 	model, err = store.Store().BookCreate(model)
 	if err != nil {
@@ -57,7 +75,6 @@ func BookCreate(data models.BookRequest) (*models.BookResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	res := &models.BookResponse{}
 	res.FromModel(model)
 	return res, nil
 }

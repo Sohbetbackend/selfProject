@@ -18,8 +18,8 @@ type BookRequest struct {
 	ID         *uint   `json:"id"`
 	Name       *string `json:"name"`
 	Page       *string `json:"page"`
-	CategoryId *uint   `json:"category_id"`
-	AuthorId   *uint   `json:"author_id"`
+	CategoryId *uint   `json:"category"`
+	AuthorId   *uint   `json:"author"`
 }
 
 func (b *BookRequest) ToModel(m *Book) {

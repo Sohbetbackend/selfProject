@@ -22,6 +22,19 @@ func CategoryList(f models.CategoryFilterRequest) ([]*models.CategoryResponse, i
 	return categoriesResponse, total, nil
 }
 
+func CategoryDetail(f models.CategoryFilterRequest) (*models.CategoryResponse, error) {
+	m, _, err := store.Store().CategoryFindBy(f)
+	if err != nil {
+		return nil, err
+	}
+	if len(m) < 1 {
+		return nil, ErrNotFound
+	}
+	res := &models.CategoryResponse{}
+	res.FromModel(&m[0])
+	return res, nil
+}
+
 func CategoryUpdate(data models.CategoryRequest) (*models.CategoryResponse, error) {
 	model := &models.Category{}
 	data.ToModel(model)

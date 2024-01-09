@@ -22,7 +22,7 @@ const sqlBookAuthor = `select ` + sqlAuthorFields + `, b.id from books b
 	right join authors a on (a.id=b.author_id) where b.id = ANY($1::int[])`
 
 const sqlBookCategory = `select ` + sqlCategoriesFields + `, b.id from books b
-	right join categories ct on (ct.id=b.author_id) where b.id = ANY($1::int[])`
+	right join categories ct on (ct.id=b.category_id) where b.id = ANY($1::int[])`
 
 func scanBook(rows pgx.Row, m *models.Book, addColumns ...interface{}) (err error) {
 	err = rows.Scan(parseColumnsForScan(m, addColumns...)...)
@@ -207,10 +207,7 @@ func (d *PgxStore) BookLoadRelations(l *[]*models.Book) error {
 		return nil
 	}
 
-	if rs, err := d.BookLoadAuthor(ids); err != nil {
-		return err
-	} else {
-
+	if rs, err := d.BookLoadAuthor(ids); err == nil {
 		for _, r := range rs {
 			for _, m := range *l {
 				if r.ID == m.ID {
@@ -218,12 +215,11 @@ func (d *PgxStore) BookLoadRelations(l *[]*models.Book) error {
 				}
 			}
 		}
+	} else {
+		return err
 	}
 
 	if rs, err := d.BookLoadCategory(ids); err != nil {
-		return err
-	} else {
-
 		for _, r := range rs {
 			for _, m := range *l {
 				if r.ID == m.ID {
@@ -231,6 +227,8 @@ func (d *PgxStore) BookLoadRelations(l *[]*models.Book) error {
 				}
 			}
 		}
+	} else {
+		return err
 	}
 	return nil
 }

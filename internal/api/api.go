@@ -14,7 +14,7 @@ func Success(c *gin.Context, data gin.H) {
 }
 
 func SuccessResponseObject(data gin.H) gin.H {
-	data["success"] = true
+	// data["success"] = true
 	return data
 }
 

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"net/http"
 	"strconv"
 
 	"github.com/Sohbetbackend/selfProject/internal/app"
@@ -12,6 +13,7 @@ func AuthorRoutes(api *gin.RouterGroup) {
 	authorRoutes := api.Group("/authors")
 	{
 		authorRoutes.GET("", AuthorList)
+		authorRoutes.GET(":id", AuthorsDetail)
 		authorRoutes.POST("", AuthorCreate)
 		authorRoutes.PUT(":id", AuthorUpdate)
 		authorRoutes.DELETE("", AuthorDelete)
@@ -37,10 +39,32 @@ func AuthorList(c *gin.Context) {
 		handleError(c, err)
 		return
 	}
-	Success(c, gin.H{
-		"authors": authors,
-		"total":   total,
-	})
+
+	c.Header("X-Total-Count", strconv.Itoa(total))
+	c.JSON(http.StatusOK, authors)
+}
+
+func AuthorsDetail(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+	idu := uint(id)
+	if id == 0 {
+		handleError(c, err)
+		return
+	}
+
+	args := models.AuthorsFilterRequest{
+		ID: &idu,
+	}
+	res, err := app.AuthorDetail(args)
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, res)
 }
 
 func AuthorUpdate(c *gin.Context) {

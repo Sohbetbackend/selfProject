@@ -1,6 +1,7 @@
 package api
 
 import (
+	"net/http"
 	"strconv"
 
 	"github.com/Sohbetbackend/selfProject/internal/app"
@@ -12,6 +13,7 @@ func CategoriesRoutes(api *gin.RouterGroup) {
 	categoryRoutes := api.Group("/categories")
 	{
 		categoryRoutes.GET("", CategoryList)
+		categoryRoutes.GET(":id", CategoriesDetail)
 		categoryRoutes.POST("", CategoryCreate)
 		categoryRoutes.PUT(":id", CategoryUpdate)
 		categoryRoutes.DELETE("", CategoryDelete)
@@ -29,10 +31,31 @@ func CategoryList(c *gin.Context) {
 		handleError(c, err)
 		return
 	}
-	Success(c, gin.H{
-		"categories": categories,
-		"total":      total,
-	})
+	c.Header("X-Total-Count", strconv.Itoa(total))
+	c.JSON(http.StatusOK, categories)
+}
+
+func CategoriesDetail(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+	idu := uint(id)
+	if id == 0 {
+		handleError(c, err)
+		return
+	}
+
+	args := models.CategoryFilterRequest{
+		ID: &idu,
+	}
+	res, err := app.CategoryDetail(args)
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, res)
 }
 
 func CategoryUpdate(c *gin.Context) {

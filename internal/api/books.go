@@ -1,6 +1,7 @@
 package api
 
 import (
+	"net/http"
 	"strconv"
 
 	"github.com/Sohbetbackend/selfProject/internal/app"
@@ -12,6 +13,7 @@ func BookRoutes(api *gin.RouterGroup) {
 	bookRoutes := api.Group("/books")
 	{
 		bookRoutes.GET("", BookList)
+		bookRoutes.GET(":id", BooksDetail)
 		bookRoutes.POST("", BookCreate)
 		bookRoutes.PUT(":id", BookUpdate)
 		bookRoutes.DELETE("", BookDelete)
@@ -29,11 +31,31 @@ func BookList(c *gin.Context) {
 		handleError(c, err)
 		return
 	}
+	c.Header("X-Total-Count", strconv.Itoa(total))
+	c.JSON(http.StatusOK, books)
+}
 
-	Success(c, gin.H{
-		"books": books,
-		"total": total,
-	})
+func BooksDetail(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+	idu := uint(id)
+	if id == 0 {
+		handleError(c, err)
+		return
+	}
+
+	args := models.BookFilterRequest{
+		ID: &idu,
+	}
+	res, err := app.BookDetail(args)
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, res)
 }
 
 func BookUpdate(c *gin.Context) {
@@ -55,9 +77,7 @@ func BookUpdate(c *gin.Context) {
 		handleError(c, err)
 		return
 	}
-	Success(c, gin.H{
-		"book": book,
-	})
+	c.JSON(http.StatusOK, book)
 }
 
 func BookCreate(c *gin.Context) {
@@ -71,9 +91,7 @@ func BookCreate(c *gin.Context) {
 		handleError(c, err)
 		return
 	}
-	Success(c, gin.H{
-		"book": book,
-	})
+	c.JSON(http.StatusOK, book)
 }
 
 func BookDelete(c *gin.Context) {
@@ -87,7 +105,5 @@ func BookDelete(c *gin.Context) {
 		handleError(c, err)
 		return
 	}
-	Success(c, gin.H{
-		"books": books,
-	})
+	c.JSON(http.StatusOK, books)
 }
