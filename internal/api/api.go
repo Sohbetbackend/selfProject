@@ -1,7 +1,10 @@
 package api
 
 import (
+	"errors"
+	"mime/multipart"
 	"net/http"
+	"strings"
 
 	"github.com/Sohbetbackend/selfProject/internal/app"
 	"github.com/Sohbetbackend/selfProject/internal/utils"
@@ -55,4 +58,40 @@ func ErrorResponseObject(err *app.AppError) gin.H {
 			"comment": err.Comment(),
 		},
 	}
+}
+
+func handleFile(c *gin.Context, handler *multipart.FileHeader, folder string) (string, error) {
+	var err error
+	path := "web/uploads/" + folder + "/"
+	fParts := strings.Split(handler.Filename, ".")
+	ext := "." + strings.ToLower(fParts[len(fParts)-1])
+	if ext != ".pdf" && ext != ".txt" && ext != ".jpg" && ext != ".png" {
+		return "", errors.New("invalid extension: " + ext)
+	}
+	name := handler.Filename + ext
+	err = c.SaveUploadedFile(handler, path+name)
+	if err != nil {
+		utils.LoggerDesc("HTTP error").Error(err)
+		return "", err
+	}
+	return folder + "/" + name, nil
+}
+
+func handleFilesUpload(c *gin.Context, key string, folder string) ([]string, error) {
+	c.Request.ParseMultipartForm(100)
+	form, err := c.MultipartForm()
+	if err != nil {
+		return nil, nil
+	}
+	files := form.File[key]
+
+	paths := []string{}
+	for _, f := range files {
+		path, err := handleFile(c, f, folder)
+		if err != nil {
+			return nil, err
+		}
+		paths = append(paths, path)
+	}
+	return paths, nil
 }

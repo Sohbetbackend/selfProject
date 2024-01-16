@@ -8,6 +8,8 @@ import (
 	"github.com/Sohbetbackend/selfProject/internal/store"
 )
 
+// AuthorsFindBy(f models.AuthorsFilterRequest) (authors []*models.Author, total int, err error)
+
 func AuthorsList(f models.AuthorsFilterRequest) ([]*models.AuthorResponse, int, error) {
 	authors, total, err := store.Store().AuthorsFindBy(f)
 	if err != nil {
@@ -55,12 +57,12 @@ func AuthorsUpdate(data models.AuthorRequest) (*models.AuthorResponse, error) {
 func AuthorsCreate(data models.AuthorRequest) (*models.AuthorResponse, error) {
 	model := &models.Author{}
 	data.ToModel(model)
+	res := &models.AuthorResponse{}
 	var err error
 	model, err = store.Store().AuthorsCreate(model)
 	if err != nil {
 		return nil, err
 	}
-	res := &models.AuthorResponse{}
 	res.FromModel(model)
 	return res, nil
 }

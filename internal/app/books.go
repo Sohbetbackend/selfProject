@@ -65,7 +65,6 @@ func BookUpdate(data models.BookRequest) (*models.BookResponse, error) {
 func BookCreate(data models.BookRequest) (*models.BookResponse, error) {
 	model := &models.Book{}
 	data.ToModel(model)
-	res := &models.BookResponse{}
 	var err error
 	model, err = store.Store().BookCreate(model)
 	if err != nil {
@@ -75,6 +74,7 @@ func BookCreate(data models.BookRequest) (*models.BookResponse, error) {
 	if err != nil {
 		return nil, err
 	}
+	res := &models.BookResponse{}
 	res.FromModel(model)
 	return res, nil
 }

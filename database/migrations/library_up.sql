@@ -1,9 +1,11 @@
+-- ALTER TABLE books ADD files varchar(255) DEFAULT NULL;
 create table books (
     id serial primary KEY,
     category_id bigint NULL REFERENCES categories,
     author_id bigint NULL REFERENCES authors,
     name varchar(255) NOT NULL,
-    page varchar(255) DEFAULT NULL
+    page varchar(255) DEFAULT NULL,
+    files varchar(255) DEFAULT NULL
 );
 
 create table categories (

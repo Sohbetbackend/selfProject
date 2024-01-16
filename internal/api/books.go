@@ -86,6 +86,17 @@ func BookCreate(c *gin.Context) {
 		handleError(c, app.NewAppError(errMsg, errKey, ""))
 		return
 	}
+
+	files, err := handleFilesUpload(c, "files", "books")
+	if err != nil {
+		app.NewAppError(err.Error(), "files", "")
+		return
+	}
+
+	if files != nil {
+		r.Files = &files
+	}
+
 	book, err := app.BookCreate(r)
 	if err != nil {
 		handleError(c, err)

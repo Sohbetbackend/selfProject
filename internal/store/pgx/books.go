@@ -11,7 +11,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-const sqlBookFields = `b.id, b.category_id, b.author_id, b.name, b.page`
+const sqlBookFields = `b.id, b.category_id, b.author_id, b.name, b.page, b.files`
 const sqlBookInsert = `insert into books`
 const sqlBookUpdate = `update books b set id=id`
 const sqlBookDelete = `delete from books b where id = ANY($1::int[])`
@@ -165,13 +165,16 @@ func BookAtomicQuery(m *models.Book) map[string]interface{} {
 	q := map[string]interface{}{}
 	q["name"] = m.Name
 	if m.Page != nil {
-		q["page"] = m.Page
+		q["page"] = *m.Page
 	}
 	if m.AuthorId != nil {
-		q["author_id"] = m.AuthorId
+		q["author_id"] = *m.AuthorId
 	}
 	if m.CategoryId != nil {
-		q["category_id"] = m.CategoryId
+		q["category_id"] = *m.CategoryId
+	}
+	if m.Files != nil {
+		q["files"] = *m.Files
 	}
 	return q
 }

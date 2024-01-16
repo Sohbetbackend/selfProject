@@ -12,7 +12,7 @@ import (
 )
 
 const sqlAuthorFields = `a.id, a.first_name, a.last_name`
-const sqlAuthorSelect = `select ` + sqlAuthorFields + ` from authors a where a.id = ANY($1::[]int)`
+const sqlAuthorSelect = `select ` + sqlAuthorFields + ` from authors a where a.id = ANY($1::int[])`
 const sqlAuthorSelectMany = `select ` + sqlAuthorFields + `, count(*) over() as total from authors a where a.id=a.id limit $1 offset $2`
 const sqlAuthorInsert = `insert into authors`
 const sqlAuthorUpdate = `update authors a set id=id`
